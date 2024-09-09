@@ -8,24 +8,64 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import Images from '../assets/images';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import dbInstance from './Database';
+
+const db = dbInstance.initDB(); // Initialize the DB
 
 const OnBoardingScreen = ({navigation}) => {
   const [fname, setFname] = useState('');
-  const [lname, setLname] = useState('');
+  const [email, setEmail] = useState('');
 
   const onBoardingComplete = async () => {
     try {
       await AsyncStorage.setItem('onBoardingComplete', 'true');
-      console.log(fname, lname);
+      console.log(fname, email);
+      saveProfile();
       navigation.replace('ProfileScreen');
     } catch (error) {
       console.log('Error in saving', error);
     }
   };
 
+  const executeQuery = (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+      this.db.transaction((tx) => {
+        tx.executeSql(
+          sql,
+          params,
+          (tx, result) => {
+            resolve(result);
+          },
+          (error) => {
+            reject(error);
+          }
+        );
+      });
+    });
+  };
+
+  const saveProfile = () => {
+
+    if(db){
+      db.transaction(tx => {
+        tx.executeSql(
+          `INSERT INTO Profile (firstName, email) 
+          VALUES (?, ?)`,
+          [fname, email ],
+          () => {
+            console.log('Profile saved successfully');
+          },
+          error => {
+            console.log('Error saving profile: ', error);
+          }
+        );
+      });
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.headerView}>
@@ -42,18 +82,19 @@ const OnBoardingScreen = ({navigation}) => {
             value={fname}
             onChangeText={setFname}
           />
-          <Text style={styles.text}>Last Name</Text>
+          <Text style={styles.text}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="Last Name"
-            value={lname}
-            onChangeText={setLname}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType={'email-address'}
           />
         </View>
       </View>
       <View style={styles.bottomView}>
         <TouchableOpacity
-          disabled={!fname || !lname}
+          disabled={!fname || !email}
           style={styles.buttonNext}
           onPress={() => {
             onBoardingComplete();

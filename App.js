@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unstable-nested-components */
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -17,7 +18,9 @@ import HomeScreen from './screens/HomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import SplashScreen from './screens/SplashScreen';
 import OnBoardingScreen from './screens/OnBoardingScreen';
-import SQLite from 'react-native-sqlite-storage';
+import { Button } from 'react-native-elements';
+import dbInstance from './screens/Database';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -26,7 +29,10 @@ function App(){
   const [isOnBoardingComplete, setIsOnBoardingComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+
   useEffect(() => {
+
+      dbInstance.initDB(); // This will initialize the DB and create the tables
 
       const checkOnBoardingStatus = async () => {
 
@@ -64,7 +70,15 @@ function App(){
         <Stack.Navigator initialRouteName={isOnBoardingComplete ? 'ProfileScreen' : 'OnBoardingScreen'}>
           <Stack.Screen name="OnBoardingScreen" component={OnBoardingScreen} options={{headerShown:false}} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
-          <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{headerShown:true}} />
+          <Stack.Screen name="ProfileScreen" component={ProfileScreen}  options={({ navigation }) => ({
+            title: 'Profile',
+            headerLeft: () => (
+              <Button
+                onPress={() => navigation.navigate('HomeScreen')}
+                title="Back"
+              />
+            ),
+          })} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaView>

@@ -7,13 +7,15 @@ import {
   TextInput,
   ScrollView,
   StyleSheet,
+  Alert,
 } from 'react-native';
-import {CheckBox} from 'react-native-elements';
+import { CheckBox } from '@rneui/themed';
 import {launchImageLibrary} from 'react-native-image-picker';
 import SQLite from 'react-native-sqlite-storage';
 import RNFS from 'react-native-fs';
+import dbInstance from './Database';
 
-let db;
+const db = dbInstance.initDB(); // Initialize the DB
 
 let base64Encoded = '';
 
@@ -67,42 +69,8 @@ const ProfileScreen = () => {
   };
 
   useEffect(() => {
-    const openDatabaseAndCreateTable = () => {
-      db = SQLite.openDatabase(
-        { name: 'profileDB', location: 'default' },
-        () => {
-          console.log('Database opened successfully');
-          if(db){
-            createTable(); // Call createTable after database is opened
-            getProfile();
-          }
-        },
-        error => {
-          console.log('Error opening database: ', error);
-        }
-      );
-    };
-    openDatabaseAndCreateTable();
-  }, []);
-
-  const createTable = () => {
-
-    if(db !== null){
-
-      db.transaction(tx => {
-        tx.executeSql(
-          'CREATE TABLE IF NOT EXISTS Profile (id INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT,lastName TEXT, email TEXT, phone TEXT, image TEXT)',
-          [],
-          () => {
-            console.log('Table created successfully');
-          },
-          error => {
-            console.log('Error in creating table: ', error);
-          }
-        );
-      });
-    }
-  };
+    getProfile();
+  },[]);
 
   const getProfile = () => {
     db.transaction(tx => {
@@ -139,11 +107,11 @@ const ProfileScreen = () => {
     if(db){
       db.transaction(tx => {
         tx.executeSql(
-          `INSERT INTO Profile (firstName, lastName, email, phone, image) 
-          VALUES (?, ?, ?, ?, ?)`,
+          'UPDATE Profile SET firstName = ?, lastName = ?, email = ? , phone = ?, image = ? WHERE id = 1',
           [fname, lname, email, phone, base64Encoded],
           () => {
             console.log('Profile saved successfully');
+            Alert.alert('Profile saved successfully');
           },
           error => {
             console.log('Error saving profile: ', error);
@@ -201,24 +169,25 @@ const ProfileScreen = () => {
               keyboardType={'phone-pad'}
             />
             <Text style={styles.text}>Email Notification</Text>
+
             <CheckBox
-              label="Order Statuses"
-              isChecked={checkedState.option1}
+              title="Order Statuses"
+              checked={checkedState.option1}
               onPress={() => handleCheckboxPress('option1')}
             />
             <CheckBox
-              label="Password Changes"
-              isChecked={checkedState.option2}
+              title="Password Changes"
+              checked={checkedState.option2}
               onPress={() => handleCheckboxPress('option2')}
             />
             <CheckBox
-              label="Special Offers"
-              isChecked={checkedState.option3}
+              title="Special Offers"
+              checked={checkedState.option3}
               onPress={() => handleCheckboxPress('option3')}
             />
             <CheckBox
-              label="News Letter"
-              isChecked={checkedState.option4}
+              title="News Letter"
+              checked={checkedState.option4}
               onPress={() => handleCheckboxPress('option4')}
             />
 
